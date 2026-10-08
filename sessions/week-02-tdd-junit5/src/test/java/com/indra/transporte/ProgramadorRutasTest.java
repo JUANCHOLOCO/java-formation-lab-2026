@@ -8,6 +8,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import com.indra.transporte.model.Bus;
 import com.indra.transporte.model.Horario;
@@ -92,5 +95,66 @@ public class ProgramadorRutasTest {
     @DisplayName("Debe lanzar UnsupportedTypeException cuando el tipo es desconocido")
     void debeLanzarUnsupportedTypeExceptionCuandoTipoEsDesconocido() {
         fail("Implementar este test para lanzar UnsupportedTypeException cuando el tipo es desconocido");
+    }
+
+    @Test
+    @DisplayName("Debe rechazar un horario nulo")
+    void debeRechazarHorarioNulo() {
+        assertThrows(IllegalArgumentException.class, () -> programador.programar(null));
+    }
+
+    @Test
+    @DisplayName("Debe rechazar un horario sin bus")
+    void debeRechazarBusNulo() {
+        Horario sinBus = horario(null, ruta(GENERAL), hora("08:00"), hora("10:00"));
+        assertThrows(IllegalArgumentException.class, () -> programador.programar(sinBus));
+    }
+
+    @Test
+    @DisplayName("Debe rechazar un horario sin ruta")
+    void debeRechazarRutaNula() {
+        Horario sinRuta = horario(bus(PLACA, DIESEL), null, hora("08:00"), hora("10:00"));
+        assertThrows(IllegalArgumentException.class, () -> programador.programar(sinRuta));
+    }
+
+    @Test
+    @DisplayName("Debe rechazar un horario sin hora de salida")
+    void debeRechazarHoraSalidaNula() {
+        Horario sinSalida = horario(bus(PLACA, DIESEL), ruta(GENERAL), null, hora("10:00"));
+        assertThrows(IllegalArgumentException.class, () -> programador.programar(sinSalida));
+    }
+
+    @Test
+    @DisplayName("Debe rechazar un horario sin hora de llegada")
+    void debeRechazarHoraLlegadaNula() {
+        Horario sinLlegada = horario(bus(PLACA, DIESEL), ruta(GENERAL), hora("08:00"), null);
+        assertThrows(IllegalArgumentException.class, () -> programador.programar(sinLlegada));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   "})
+    @DisplayName("Debe rechazar una placa de bus nula, vacía o en blanco")
+    void debeRechazarPlacaNulaOVacia(String placa) {
+        Horario h = horario(bus(placa, DIESEL), ruta(GENERAL), hora("08:00"), hora("10:00"));
+        assertThrows(IllegalArgumentException.class, () -> programador.programar(h));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   "})
+    @DisplayName("Debe rechazar un tipo de bus nulo, vacío o en blanco")
+    void debeRechazarTipoBusNuloOVacio(String tipoBus) {
+        Horario h = horario(bus(PLACA, tipoBus), ruta(GENERAL), hora("08:00"), hora("10:00"));
+        assertThrows(IllegalArgumentException.class, () -> programador.programar(h));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   "})
+    @DisplayName("Debe rechazar un tipo de ruta nulo, vacío o en blanco")
+    void debeRechazarTipoRutaNuloOVacio(String tipoRuta) {
+        Horario h = horario(bus(PLACA, DIESEL), ruta(tipoRuta), hora("08:00"), hora("10:00"));
+        assertThrows(IllegalArgumentException.class, () -> programador.programar(h));
     }
 }
