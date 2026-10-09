@@ -5,10 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.time.LocalTime;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -16,18 +19,35 @@ import com.indra.transporte.model.Bus;
 import com.indra.transporte.model.Horario;
 import com.indra.transporte.model.Ruta;
 
+@DisplayName("ProgramadorRutas")
 public class ProgramadorRutasTest {
+
+    private static final String ELECTRICO = "Electric";
+    private static final String GENERAL = "General";
+    private static final String DIESEL = "Diesel";
+    private static final String PLACA = "ABC123";
     private final ProgramadorRutas programador = new ProgramadorRutas();
+
+    private static Bus bus(String placa, String tipo) {
+        return new Bus(placa, tipo);
+    }
+
+    private static Ruta ruta(String tipo) {
+        return new Ruta(tipo, "R001", "Ciudad A", "Ciudad B");
+    }
+
+    private static LocalTime hora(String valor) {
+        return LocalTime.parse(valor);
+    }
+
+    private static Horario horario(Bus bus, Ruta ruta, LocalTime salida, LocalTime llegada) {
+        return new Horario(bus, ruta, salida, llegada);
+    }
 
     @Test
     @DisplayName("Debe registrar un horario")
     void debeRegistrarUnHorario() {
-        Bus bus = new Bus("ABC123", "Diesel");
-        Ruta ruta = new Ruta("Electric","R001", "Ciudad A", "Ciudad B");
-        Horario horario = new Horario(bus, ruta,
-                java.time.LocalTime.of(8, 0), java.time.LocalTime.of(10, 0));
-
-        programador.programar(horario);
+        programador.programar(horario(bus(PLACA, DIESEL), ruta(ELECTRICO), hora("08:00"), hora("10:00")));
 
         assertEquals(1, programador.getHorarios().size());
     }
@@ -133,7 +153,7 @@ public class ProgramadorRutasTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"   "})
+    @ValueSource(strings = { "   " })
     @DisplayName("Debe rechazar una placa de bus nula, vacía o en blanco")
     void debeRechazarPlacaNulaOVacia(String placa) {
         Horario h = horario(bus(placa, DIESEL), ruta(GENERAL), hora("08:00"), hora("10:00"));
@@ -142,7 +162,7 @@ public class ProgramadorRutasTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"   "})
+    @ValueSource(strings = { "   " })
     @DisplayName("Debe rechazar un tipo de bus nulo, vacío o en blanco")
     void debeRechazarTipoBusNuloOVacio(String tipoBus) {
         Horario h = horario(bus(PLACA, tipoBus), ruta(GENERAL), hora("08:00"), hora("10:00"));
@@ -151,10 +171,28 @@ public class ProgramadorRutasTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"   "})
+    @ValueSource(strings = { "   " })
     @DisplayName("Debe rechazar un tipo de ruta nulo, vacío o en blanco")
     void debeRechazarTipoRutaNuloOVacio(String tipoRuta) {
         Horario h = horario(bus(PLACA, DIESEL), ruta(tipoRuta), hora("08:00"), hora("10:00"));
+        assertThrows(IllegalArgumentException.class, () -> programador.programar(h));
+    }
+
+    @Test
+    @DisplayName("Debe rechazar un horario cuya llegada es anterior a la salida")
+    void debeRechazarHorarioRangoInvalido() {
+        Horario invertido = horario(bus(PLACA, DIESEL), ruta(GENERAL), hora("10:00"), hora("08:00"));
+        assertThrows(IllegalArgumentException.class, () -> programador.programar(invertido));
+    }
+
+    @ParameterizedTest(name = "salida {0} y llegada {1} debe rechazarse")
+    @CsvSource({
+            "10:00, 08:00",
+            "10:00, 10:00"
+    })
+    @DisplayName("Debe rechazar cuando la llegada no es posterior a la salida")
+    void debeRechazarHorarioConLlegadaNoPosteriorALaSalida(String salida, String llegada) {
+        Horario h = horario(bus(PLACA, DIESEL), ruta(GENERAL), hora(salida), hora(llegada));
         assertThrows(IllegalArgumentException.class, () -> programador.programar(h));
     }
 }
