@@ -15,9 +15,8 @@ public class ProgramadorRutas {
 
     public void programar(Horario horario) {
         validarCamposObligatorios(horario);
-        if (horario == null) {
-            throw new IllegalArgumentException("El horario no puede ser nulo");
-        }
+        debeValidarTipoRutasYBuses(horario);
+        validarRangoHorario(horario);
         horarios.add(horario);
     }
 
@@ -35,35 +34,41 @@ public class ProgramadorRutas {
     }
 
     private void validarCamposObligatorios(Horario horario) {
-    if (horario == null) {
-        throw new IllegalArgumentException("El horario no puede ser nulo");
+        if (horario == null) {
+            throw new IllegalArgumentException("El horario no puede ser nulo");
+        }
+        validarBus(horario.getBus());
+        if (horario.getRuta() == null) {
+            throw new IllegalArgumentException("La ruta no puede ser nula");
+        }
+        if (estaVacio(horario.getRuta().getTipo())) {
+            throw new IllegalArgumentException("El tipo de ruta no puede ser nulo o vacío");
+        }
+        if (horario.getHoraSalida() == null || horario.getHoraLlegada() == null) {
+            throw new IllegalArgumentException("Las horas de salida y llegada son obligatorias");
+        }
     }
-    validarBus(horario.getBus());
-    if (horario.getRuta() == null) {
-        throw new IllegalArgumentException("La ruta no puede ser nula");
-    }
-    if (estaVacio(horario.getRuta().getTipo())) {
-        throw new IllegalArgumentException("El tipo de ruta no puede ser nulo o vacío");
-    }
-    if (horario.getHoraSalida() == null || horario.getHoraLlegada() == null) {
-        throw new IllegalArgumentException("Las horas de salida y llegada son obligatorias");
-    }
-}
 
-private void validarBus(Bus bus) {
-    if (bus == null) {
-        throw new IllegalArgumentException("El bus no puede ser nulo");
+    private void validarBus(Bus bus) {
+        if (bus == null) {
+            throw new IllegalArgumentException("El bus no puede ser nulo");
+        }
+        if (estaVacio(bus.getPlaca())) {
+            throw new IllegalArgumentException("La placa del bus no puede ser nula o vacía");
+        }
+        if (estaVacio(bus.getTipo())) {
+            throw new IllegalArgumentException("El tipo de bus no puede ser nulo o vacío");
+        }
     }
-    if (estaVacio(bus.getPlaca())) {
-        throw new IllegalArgumentException("La placa del bus no puede ser nula o vacía");
-    }
-    if (estaVacio(bus.getTipo())) {
-        throw new IllegalArgumentException("El tipo de bus no puede ser nulo o vacío");
-    }
-}
 
-private static boolean estaVacio(String valor) {
-    return valor == null || valor.isBlank();
-}
+    private static boolean estaVacio(String valor) {
+        return valor == null || valor.isBlank();
+    }
+
+    private void validarRangoHorario(Horario horario) {
+        if (!horario.getHoraLlegada().isAfter(horario.getHoraSalida())) {
+            throw new IllegalArgumentException("La hora de llegada debe ser posterior a la de salida");
+        }
+    }
 
 }
