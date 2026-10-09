@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.time.LocalTime;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -194,5 +195,58 @@ public class ProgramadorRutasTest {
     void debeRechazarHorarioConLlegadaNoPosteriorALaSalida(String salida, String llegada) {
         Horario h = horario(bus(PLACA, DIESEL), ruta(GENERAL), hora(salida), hora(llegada));
         assertThrows(IllegalArgumentException.class, () -> programador.programar(h));
+    }
+
+    @Nested
+    @DisplayName("Cuando un bus ya tiene horarios programados")
+    class CuandoUnBusYaTieneHorariosProgramados {
+
+        @BeforeEach
+        void programarHorarioBase() {
+            programador.programar(horario(bus(PLACA, DIESEL), ruta(GENERAL), hora("08:00"), hora("10:00")));
+        }
+
+        @Test
+        @DisplayName("Debe rechazar un horario que se solapa con el existente")
+        void debeRechazarHorarioSolapado() {
+            Horario solapado = horario(bus(PLACA, DIESEL), ruta(GENERAL), hora("08:30"), hora("10:30"));
+            assertThrows(IllegalArgumentException.class, () -> programador.programar(solapado));
+            assertEquals(1, programador.getHorarios().size());
+        }
+
+        @ParameterizedTest(name = "nuevo {2}-{3} sobre existente {0}-{1}")
+        @CsvSource({
+                "08:00, 10:00, 08:30, 10:30",
+                "08:00, 10:00, 07:30, 08:30",
+                "08:00, 10:00, 07:00, 11:00",
+                "08:00, 10:00, 08:00, 10:00",
+                "08:00, 10:00, 09:00, 09:30"
+        })
+        @DisplayName("Debe rechazar cualquier intersección de intervalos para el mismo bus")
+        void debeRechazarSolapamientoParametrizado(String salidaExistente, String llegadaExistente,
+                String salidaNueva, String llegadaNueva) {
+            Horario nuevo = horario(bus(PLACA, DIESEL), ruta(GENERAL), hora(salidaNueva), hora(llegadaNueva));
+            assertThrows(IllegalArgumentException.class, () -> programador.programar(nuevo));
+        }
+
+        @ParameterizedTest(name = "nuevo {0}-{1} es contiguo")
+        @CsvSource({
+                "10:00, 12:00",
+                "06:00, 08:00"
+        })
+        @DisplayName("Debe permitir horarios contiguos que no se solapan")
+        void debePermitirHorariosContiguos(String salida, String llegada) {
+            Horario contiguo = horario(bus(PLACA, DIESEL), ruta(GENERAL), hora(salida), hora(llegada));
+            assertDoesNotThrow(() -> programador.programar(contiguo));
+            assertEquals(2, programador.getHorarios().size());
+        }
+
+        @Test
+        @DisplayName("Debe permitir el mismo horario para un bus distinto")
+        void debePermitirMismoHorarioParaOtroBus() {
+            Horario otroBus = horario(bus("XYZ999", DIESEL), ruta(GENERAL), hora("08:00"), hora("10:00"));
+            assertDoesNotThrow(() -> programador.programar(otroBus));
+            assertEquals(2, programador.getHorarios().size());
+        }
     }
 }
