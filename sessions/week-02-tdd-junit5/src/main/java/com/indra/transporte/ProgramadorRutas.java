@@ -3,7 +3,9 @@ package com.indra.transporte;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
+import com.indra.transporte.exception.UnsupportedTypeException;
 import com.indra.transporte.model.Bus;
 import com.indra.transporte.model.Horario;
 
@@ -12,6 +14,9 @@ import lombok.Data;
 @Data
 public class ProgramadorRutas {
 
+    private static final String TIPO_ELECTRICO = "Electric";
+    private static final Set<String> TIPOS_RUTA_VALIDOS = Set.of(TIPO_ELECTRICO, "General");
+    
     List<Horario> horarios = new ArrayList<>();
 
     public void programar(Horario horario) {
@@ -90,6 +95,20 @@ public class ProgramadorRutas {
     private static boolean haySolapamiento(Horario a, Horario b) {
         return a.getHoraSalida().isBefore(b.getHoraLlegada())
                 && b.getHoraSalida().isBefore(a.getHoraLlegada());
+    }
+
+    public List<Horario> consultarHorariosPorTipoBus(Bus bus, String tipo) {
+        validarBus(bus);
+        if (tipo == null || !TIPOS_RUTA_VALIDOS.contains(tipo)) {
+            throw new UnsupportedTypeException("Tipo desconocido: " + tipo);
+        }
+        List<Horario> delBus = horariosDelBus(bus);
+        if (delBus.isEmpty()) {
+            throw new IllegalArgumentException("El bus " + bus.getPlaca() + " no tiene horarios programados");
+        }
+        return delBus.stream()
+                .filter(h -> tipo.equals(h.getRuta().getTipo()))
+                .toList();
     }
 
 }
