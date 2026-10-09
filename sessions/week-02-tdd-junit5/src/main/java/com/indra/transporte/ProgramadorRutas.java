@@ -2,6 +2,7 @@ package com.indra.transporte;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.indra.transporte.model.Bus;
 import com.indra.transporte.model.Horario;
@@ -17,6 +18,7 @@ public class ProgramadorRutas {
         validarCamposObligatorios(horario);
         debeValidarTipoRutasYBuses(horario);
         validarRangoHorario(horario);
+        validarSinSolapamiento(horario);
         horarios.add(horario);
     }
 
@@ -69,6 +71,25 @@ public class ProgramadorRutas {
         if (!horario.getHoraLlegada().isAfter(horario.getHoraSalida())) {
             throw new IllegalArgumentException("La hora de llegada debe ser posterior a la de salida");
         }
+    }
+
+    private void validarSinSolapamiento(Horario nuevo) {
+        boolean solapa = horariosDelBus(nuevo.getBus()).stream()
+                .anyMatch(existente -> haySolapamiento(existente, nuevo));
+        if (solapa) {
+            throw new IllegalArgumentException("El bus ya tiene un horario que se solapa con el indicado");
+        }
+    }
+
+    private List<Horario> horariosDelBus(Bus bus) {
+        return horarios.stream()
+                .filter(h -> Objects.equals(h.getBus().getPlaca(), bus.getPlaca()))
+                .toList();
+    }
+
+    private static boolean haySolapamiento(Horario a, Horario b) {
+        return a.getHoraSalida().isBefore(b.getHoraLlegada())
+                && b.getHoraSalida().isBefore(a.getHoraLlegada());
     }
 
 }

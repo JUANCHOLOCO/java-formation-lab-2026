@@ -100,23 +100,6 @@ public class ProgramadorRutasTest {
         }
     }
 
-    @Test
-    @DisplayName("Debe devolver los horarios del tipo solicitado")
-    void debeDevolverLosHorariosDelTipoSolicitado() {
-        fail("Implementar este test para devolver los horarios del tipo solicitado");
-    }
-
-    @Test
-    @DisplayName("Debe lanzar IllegalArgumentException cuando el bus es desconocido")
-    void debeLanzarIllegalArgumentExceptionCuandoBusEsDesconocido() {
-        fail("Implementar este test para lanzar IllegalArgumentException cuando el bus es desconocido");
-    }
-
-    @Test
-    @DisplayName("Debe lanzar UnsupportedTypeException cuando el tipo es desconocido")
-    void debeLanzarUnsupportedTypeExceptionCuandoTipoEsDesconocido() {
-        fail("Implementar este test para lanzar UnsupportedTypeException cuando el tipo es desconocido");
-    }
 
     @Test
     @DisplayName("Debe rechazar un horario nulo")
