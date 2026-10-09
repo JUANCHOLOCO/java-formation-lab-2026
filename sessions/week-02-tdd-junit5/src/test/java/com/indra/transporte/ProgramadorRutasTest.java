@@ -3,9 +3,11 @@ package com.indra.transporte;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.time.LocalTime;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +18,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import com.indra.transporte.exception.UnsupportedTypeException;
 import com.indra.transporte.model.Bus;
 import com.indra.transporte.model.Horario;
 import com.indra.transporte.model.Ruta;
@@ -99,7 +102,6 @@ public class ProgramadorRutasTest {
             assertDoesNotThrow(() -> programador.debeValidarTipoRutasYBuses(horario));
         }
     }
-
 
     @Test
     @DisplayName("Debe rechazar un horario nulo")
@@ -230,6 +232,67 @@ public class ProgramadorRutasTest {
             Horario otroBus = horario(bus("XYZ999", DIESEL), ruta(GENERAL), hora("08:00"), hora("10:00"));
             assertDoesNotThrow(() -> programador.programar(otroBus));
             assertEquals(2, programador.getHorarios().size());
+        }
+    }
+
+    @Nested
+    @DisplayName("Cuando se consultan horarios por tipo de bus")
+    class CuandoSeConsultanHorarios {
+
+        @BeforeEach
+        void programarHorariosMixtos() {
+            programador.programar(horario(bus(PLACA, DIESEL), ruta(ELECTRICO), hora("08:00"), hora("10:00")));
+            programador.programar(horario(bus(PLACA, DIESEL), ruta(GENERAL), hora("11:00"), hora("12:00")));
+        }
+
+        @Test
+        @DisplayName("Debe devolver solo los horarios del tipo solicitado")
+        void debeDevolverLosHorariosDelTipoSolicitado() {
+            List<Horario> resultado = programador.consultarHorariosPorTipoBus(bus(PLACA, DIESEL), ELECTRICO);
+
+            assertEquals(1, resultado.size());
+            assertEquals(ELECTRICO, resultado.get(0).getRuta().getTipo());
+        }
+
+        @Test
+        @DisplayName("Debe devolver lista vacía si el bus no tiene horarios de ese tipo")
+        void debeDevolverListaVaciaSiNoHayHorariosDeEseTipo() {
+            Horario soloGeneral = horario(bus("XYZ999", DIESEL), ruta(GENERAL), hora("13:00"), hora("14:00"));
+            programador.programar(soloGeneral);
+
+            List<Horario> resultado = programador.consultarHorariosPorTipoBus(bus("XYZ999", DIESEL), ELECTRICO);
+
+            assertTrue(resultado.isEmpty());
+        }
+
+        @Test
+        @DisplayName("Debe lanzar IllegalArgumentException cuando el bus es desconocido")
+        void debeLanzarIllegalArgumentExceptionCuandoBusEsDesconocido() {
+            Bus desconocido = bus("NOEXISTE", DIESEL);
+            assertThrows(IllegalArgumentException.class,
+                    () -> programador.consultarHorariosPorTipoBus(desconocido, ELECTRICO));
+        }
+
+        @Test
+        @DisplayName("Debe lanzar IllegalArgumentException cuando el bus es nulo")
+        void debeLanzarIllegalArgumentExceptionCuandoBusEsNulo() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> programador.consultarHorariosPorTipoBus(null, ELECTRICO));
+        }
+
+        @Test
+        @DisplayName("Debe lanzar UnsupportedTypeException cuando el tipo es desconocido")
+        void debeLanzarUnsupportedTypeExceptionCuandoTipoEsDesconocido() {
+            assertThrows(UnsupportedTypeException.class,
+                    () -> programador.consultarHorariosPorTipoBus(bus(PLACA, DIESEL), "Hidrogeno"));
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        @DisplayName("Debe lanzar UnsupportedTypeException cuando el tipo es nulo o vacío")
+        void debeLanzarUnsupportedTypeExceptionCuandoTipoEsNuloOVacio(String tipo) {
+            assertThrows(UnsupportedTypeException.class,
+                    () -> programador.consultarHorariosPorTipoBus(bus(PLACA, DIESEL), tipo));
         }
     }
 }
