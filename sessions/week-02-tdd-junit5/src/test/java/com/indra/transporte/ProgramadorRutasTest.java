@@ -294,5 +294,17 @@ public class ProgramadorRutasTest {
             assertThrows(UnsupportedTypeException.class,
                     () -> programador.consultarHorariosPorTipoBus(bus(PLACA, DIESEL), tipo));
         }
+
+        @Test
+        @DisplayName("Flujo completo: programar, rechazar solapado, aceptar contiguo y consultar")
+        void flujoCompleto() {
+            programador.programar(horario(bus(PLACA, DIESEL), ruta(ELECTRICO), hora("15:00"), hora("16:00")));
+
+            assertThrows(IllegalArgumentException.class, () -> programador.programar(
+                    horario(bus(PLACA, DIESEL), ruta(ELECTRICO), hora("11:00"), hora("13:00"))));
+
+            assertEquals(2, programador.consultarHorariosPorTipoBus(bus(PLACA, DIESEL), ELECTRICO).size());
+        }
     }
+
 }
