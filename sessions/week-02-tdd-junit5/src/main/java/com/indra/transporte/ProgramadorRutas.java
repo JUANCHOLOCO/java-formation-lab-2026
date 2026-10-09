@@ -8,15 +8,15 @@ import java.util.Set;
 import com.indra.transporte.exception.UnsupportedTypeException;
 import com.indra.transporte.model.Bus;
 import com.indra.transporte.model.Horario;
+import com.indra.transporte.util.AppConstants;
 
-import lombok.Data;
+import lombok.Getter;
 
-@Data
+@Getter
 public class ProgramadorRutas {
 
-    private static final String TIPO_ELECTRICO = "Electric";
-    private static final Set<String> TIPOS_RUTA_VALIDOS = Set.of(TIPO_ELECTRICO, "General");
-    
+    private static final Set<String> TIPOS_RUTA_VALIDOS = Set.of(AppConstants.TIPO_ELECTRICO, AppConstants.TIPO_GENERAL);
+
     List<Horario> horarios = new ArrayList<>();
 
     public void programar(Horario horario) {
