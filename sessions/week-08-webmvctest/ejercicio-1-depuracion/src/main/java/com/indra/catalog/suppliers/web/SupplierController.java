@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/suppliers")
@@ -32,7 +33,7 @@ public class SupplierController {
     }
 
     @PostMapping
-    public ResponseEntity<SupplierResponse> create(@RequestBody CreateSupplierRequest request) {
+    public ResponseEntity<SupplierResponse> create(@Valid @RequestBody CreateSupplierRequest request) {
         Supplier supplier = SupplierWebMapper.toDomain(request);
         // Normalización exigida por el área de compras: razón social en mayúsculas y NIT sin puntos
         supplier.setName(supplier.getName().trim().toUpperCase());
