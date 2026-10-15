@@ -54,27 +54,14 @@ Cada corrección va en un commit `fix:` separado. El refactor de la Parte B va e
 
 ---
 
-## Hallazgo adicional — Errores del cliente respondidos como 500 (detectado en la prueba manual) no se implemento
+## Hallazgo adicional (pendiente) — Errores del cliente respondidos como 500
+
+> **Estado: documentado, no implementado en este PR.** Se detectó en la prueba manual y queda propuesto
+> para una iteración posterior, para no mezclarlo con los 4 fallos del alcance del ejercicio.
+
 - **Síntoma**: al abrir `http://localhost:8081/api/suppliers` en el navegador (un `GET`) la API responde:
   ```json
   { "status": 500, "code": "INTERNAL_ERROR", "errors": ["ocurrió un error inesperado"], "path": "/api/suppliers" }
-  ```
-  El log muestra `HttpRequestMethodNotSupportedException: Request method 'GET' is not supported`.
-- **Causa raíz**: no existe `GET /api/suppliers` (solo `GET /{id}`, `POST` y `DELETE /{id}`), así que lo correcto es
-  un `405`. Pero `@ExceptionHandler(Exception.class)` captura **toda** excepción sin un handler más específico,
-  incluidas las de Spring MVC que representan errores del cliente. Lo mismo pasa con una ruta inexistente
-  (`NoResourceFoundException`, debería ser 404) y con un `Content-Type` no soportado (`HttpMediaTypeNotSupportedException`, debería ser 415).
-  Ningún test original cubría estos casos.
-- **Corrección**: handlers explícitos en `ApiExceptionHandler` con el mismo formato `ErrorResponse`:
-  - `HttpRequestMethodNotSupportedException` → `405 METHOD_NOT_ALLOWED`, con header `Allow`.
-  - `HttpMediaTypeNotSupportedException` → `415 UNSUPPORTED_MEDIA_TYPE`.
-  - `NoResourceFoundException` → `404 RESOURCE_NOT_FOUND`.
-
-  Se descartó extender `ResponseEntityExceptionHandler` porque responde en formato `ProblemDetail` y rompería el
-  contrato `ErrorResponse` que validan los tests.
-- **Prevención**: test `listWithoutId_methodNotSupported_returns405InsteadOf500`. Regla: un catch-all sobre `Exception`
-  siempre va acompañado de handlers específicos para las excepciones del framework. Si no, oculta errores del cliente
-  y genera falsos 500 en el monitoreo.
 
 ---
 
