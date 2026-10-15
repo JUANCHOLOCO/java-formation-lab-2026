@@ -10,7 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-public class ProductTest {
+class ProductTest {
     private static final BigDecimal PRICE = new BigDecimal("3500000.00");
 
     @Test

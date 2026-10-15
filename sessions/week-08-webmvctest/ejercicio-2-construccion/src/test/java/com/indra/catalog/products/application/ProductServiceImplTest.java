@@ -20,8 +20,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class ProductServiceImplTest {
-    
+class ProductServiceImplTest {
+
     private static final BigDecimal PRICE = new BigDecimal("3500000.00");
 
     @Mock
