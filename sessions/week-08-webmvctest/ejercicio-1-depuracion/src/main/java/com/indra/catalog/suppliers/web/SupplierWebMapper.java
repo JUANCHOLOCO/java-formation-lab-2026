@@ -1,5 +1,6 @@
 package com.indra.catalog.suppliers.web;
 
+import com.indra.catalog.suppliers.application.CreateSupplierCommand;
 import com.indra.catalog.suppliers.domain.Supplier;
 import com.indra.catalog.suppliers.web.dto.CreateSupplierRequest;
 import com.indra.catalog.suppliers.web.dto.SupplierResponse;
@@ -10,15 +11,11 @@ final class SupplierWebMapper {
     private SupplierWebMapper() {
     }
 
-    static Supplier toDomain(CreateSupplierRequest request) {
-        Supplier supplier = new Supplier();
-        supplier.setName(request.name());
-        supplier.setTaxId(request.taxId());
-        supplier.setEmail(request.email());
-        return supplier;
+    static CreateSupplierCommand toCommand(CreateSupplierRequest request) {
+        return new CreateSupplierCommand(request.name(), request.taxId(), request.email());
     }
 
     static SupplierResponse toResponse(Supplier supplier) {
-        return new SupplierResponse(supplier.getId(), supplier.getName(), supplier.getTaxId(), supplier.getEmail());
+        return new SupplierResponse(supplier.id(), supplier.name(), supplier.taxId(), supplier.email());
     }
 }
